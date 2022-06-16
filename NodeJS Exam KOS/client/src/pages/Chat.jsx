@@ -3,44 +3,67 @@ import styled from "styled-components";
 import axios from "axios";
 import { useNavigate } from 'react-router-dom';
 import { allUsers } from "../utilities/APIRoutes";
+import { useCookies } from "react-cookie";
+import Contacts from "../components/Contacts";
+import Welcome from "../components/Welcome";
 
 
 function Chat() {
-    const navigate = useNavigate();
-    const [contacts, setContacts] = useState([]);
-    const [currentUser, setCurrentUser] = useState([]);
-    const [getCookie, removeCookie] = useCookies([]);
+  const navigate = useNavigate();
+  const [contacts, setContacts] = useState([]);
+  const [currentUser, setCurrentUser] = useState([]);
+  const [getCookie, removeCookie] = useCookies([]);
+  const [currentChat, setCurrentChat] = useState();
 
-    useEffect(() => {
-        if(!getCookie.jwt) {
-          navigate("/login");
-        } 
-        
-        else {
-            setCurrentUser(await JSON.parse(localStorage.getItem("loggedInUser")))
-        }
-      }, []);
+  useEffect(() => {
 
-    useEffect( async () => {
-        if(currentUser) {
-            if(currentUser.isAvatarImageSet) {
-                const data = await axios.get(`${allUsers}/${currentUser._id}`);
-                const contactsSet = setContacts(data.data);
-                console.log("This is data.data: ", contactsSet);
-            }
+    if (!getCookie.jwt) {
+      navigate("/login");
+    }
 
-            else {
-                navigate("/profilePicture")
-            }
-        }
-    }, [currentUser])
+    else {
+      setCurrentUser(JSON.parse(localStorage.getItem("loggedInUser")))
+    }
+  }
 
-  return <Container>
+    , []);
+
+  useEffect(() => {
+    async function fetchAllContacts() {
+      console.log("WE ARE IN USEEFFFECT");
+      if (currentUser) {
+
+        const data = await axios.get(`${allUsers}/${currentUser._id}`);
+        console.log("this is currentUser Id: ", currentUser._id);
+        setContacts(data.data);
+        console.log("This is data.data: ", data.data);
+        console.log("this is data", data);
+
+
+
+      }
+    }
+    fetchAllContacts();
+  }, [currentUser]);
+
+
+  const handleChatChange = (chat) => {
+    setCurrentChat(chat);
+  }
+
+  return (<Container>
     <div className="container">
-    <Contacts contacts={contacts} />
+      <Contacts
+        contacts={contacts}
+        currentUser={currentUser}
+        changeChat={handleChatChange}
+      ></Contacts>
+      <Welcome currentUser={currentUser}>
+
+      </Welcome>
     </div>
-</Container>
-  
+  </Container>
+  )
 }
 
 const Container = styled.div`
